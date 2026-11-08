@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "44562560705",
+    "project_id": "hbplus-auth-assessment",
+    "storage_bucket": "hbplus-auth-assessment.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44562560705:android:ab190c795a69bd66e08640",
+        "android_client_info": {
+          "package_name": "com.hbplus.authportal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "44562560705-b2agpk65r1rk11aphf4ehtbeblddnq86.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hbplus.authportal",
+            "certificate_hash": "ee3d9a1759311ea0aeae6306c35e9672d199cf84"
+          }
+        },
+        {
+          "client_id": "44562560705-rv3e17hnokmcvngh9a9ka0ajpj0ddmm2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hbplus.authportal",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "44562560705-a41l3sqp403c8kbk5lu8046ht3idgqja.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCd5hif-nlM2b_XDpp5lQuiAU5g_TA9U44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "44562560705-a41l3sqp403c8kbk5lu8046ht3idgqja.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
