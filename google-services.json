@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "44562560705-t652randponj9rjis3j61c383nt5gccj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hbplus.authportal",
+            "certificate_hash": "e8036c865fe39e47a5bdde4231a6e8fb13c69085"
+          }
+        },
+        {
           "client_id": "44562560705-a41l3sqp403c8kbk5lu8046ht3idgqja.apps.googleusercontent.com",
           "client_type": 3
         }

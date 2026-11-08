@@ -32,6 +32,17 @@
       "expo-status-bar",
       "expo-web-browser",
       "@react-native-google-signin/google-signin"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "9a76f9f0-a2e6-4622-9cd0-16027810d20b"
+      }
+    },
+    "owner": "bashisthanayak"
   }
 }
