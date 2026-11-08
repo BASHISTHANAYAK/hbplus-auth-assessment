@@ -4,11 +4,12 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 const mockSignIn = jest.fn<() => Promise<any>>();
 const mockHasPlayServices = jest.fn<() => Promise<boolean>>().mockResolvedValue(true);
 const mockConfigure = jest.fn();
+const mockGoogleSignOut = jest.fn<() => Promise<any>>().mockResolvedValue(null);
 const mockCredential = jest.fn<(token: string) => any>().mockReturnValue({ providerId: 'google.com' });
 const mockSignInWithCredential = jest.fn<(auth: any, cred: any) => Promise<any>>();
 
 const mockAdapterSignInWithGoogle = jest.fn<() => Promise<any>>();
-const mockAdapterSignOut = jest.fn<() => Promise<void>>();
+const mockAdapterSignOut = jest.fn<(auth?: any) => Promise<void>>().mockResolvedValue(undefined);
 
 jest.mock('@react-native-google-signin/google-signin', () => {
   return {
@@ -16,7 +17,7 @@ jest.mock('@react-native-google-signin/google-signin', () => {
       signIn: mockSignIn,
       hasPlayServices: mockHasPlayServices,
       configure: mockConfigure,
-      signOut: jest.fn(),
+      signOut: mockGoogleSignOut,
     },
     statusCodes: {
       SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
@@ -50,14 +51,14 @@ jest.mock('firebase/auth', () => ({
 jest.mock('../src/services/authAdapter', () => ({
   authAdapter: {
     signInWithGoogle: () => mockAdapterSignInWithGoogle(),
-    signOut: () => mockAdapterSignOut(),
+    signOut: (auth: any) => mockAdapterSignOut(auth),
   },
 }));
 
 import { authAdapter as nativeAuthAdapter } from '../src/services/authAdapter/authAdapter.native';
 import { signInWithGoogleFlow } from '../src/services/authService';
 
-describe('Google Sign-In Cancellation and Error Distinctions', () => {
+describe('Google Sign-In Cancellation and Account Switching', () => {
   const dummyAuth = {} as any;
 
   beforeEach(() => {
@@ -65,8 +66,19 @@ describe('Google Sign-In Cancellation and Error Distinctions', () => {
   });
 
   describe('authAdapter.native.ts', () => {
+    it('should call GoogleSignin.signOut before GoogleSignin.signIn to guarantee account chooser is shown', async () => {
+      mockSignIn.mockResolvedValueOnce({
+        type: 'cancelled',
+        data: null,
+      });
+
+      await nativeAuthAdapter.signInWithGoogle(dummyAuth);
+
+      expect(mockGoogleSignOut).toHaveBeenCalled();
+      expect(mockSignIn).toHaveBeenCalled();
+    });
+
     it('should distinguish user cancellation when response has type "cancelled" (isCancelledResponse)', async () => {
-      // Library v13+ returns { type: 'cancelled', data: null } when user dismisses account picker
       mockSignIn.mockResolvedValueOnce({
         type: 'cancelled',
         data: null,
@@ -145,9 +157,17 @@ describe('Google Sign-In Cancellation and Error Distinctions', () => {
       expect(result.error).toBeUndefined();
       expect(mockCredential).toHaveBeenCalledWith('valid-google-id-token-xyz');
     });
+
+    it('should clear both GoogleSignin and Firebase when signOut is called', async () => {
+      const { signOut: mockFirebaseSignOut } = require('firebase/auth');
+      await nativeAuthAdapter.signOut(dummyAuth);
+
+      expect(mockGoogleSignOut).toHaveBeenCalled();
+      expect(mockFirebaseSignOut).toHaveBeenCalledWith(dummyAuth);
+    });
   });
 
-  describe('authService.ts - signInWithGoogleFlow cancellation', () => {
+  describe('authService.ts - signInWithGoogleFlow account rejection and cancellation', () => {
     it('should return isCancelled without error when auth adapter reports cancellation', async () => {
       mockAdapterSignInWithGoogle.mockResolvedValueOnce({
         firebaseUser: null,
@@ -172,6 +192,24 @@ describe('Google Sign-In Cancellation and Error Distinctions', () => {
       expect(flowResult.success).toBe(false);
       expect(flowResult.isCancelled).toBeFalsy();
       expect(flowResult.error).toContain('Google Sign-In succeeded, but no ID token was returned.');
+    });
+
+    it('should call authAdapter.signOut when user domain validation fails on sign-in', async () => {
+      // Simulate sign in with an unauthorized personal Gmail account
+      mockAdapterSignInWithGoogle.mockResolvedValueOnce({
+        firebaseUser: {
+          uid: 'rejected-uid',
+          email: 'unauthorized.user@gmail.com',
+          emailVerified: true,
+        },
+      });
+
+      const flowResult = await signInWithGoogleFlow();
+
+      expect(flowResult.success).toBe(false);
+      expect(flowResult.error).toBe('Access restricted. Please login using your official domain email.');
+      // Crucial: authAdapter.signOut must be called so native Google selection is cleared
+      expect(mockAdapterSignOut).toHaveBeenCalled();
     });
   });
 });

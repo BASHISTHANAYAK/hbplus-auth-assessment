@@ -76,8 +76,12 @@ export async function signInWithGoogleFlow(): Promise<SignInResult> {
     );
 
     if (!validation.isAllowed) {
-      // Immediately revoke unauthorized session from client
-      await firebaseSignOut(auth);
+      // Immediately revoke unauthorized session from client and native Google SDK
+      try {
+        await authAdapter.signOut(auth);
+      } catch {
+        await firebaseSignOut(auth);
+      }
       return {
         success: false,
         error: validation.errorMessage || authConfig.restrictedErrorMessage,
@@ -173,7 +177,11 @@ export function subscribeToAuthState(
     );
 
     if (!validation.isAllowed) {
-      await firebaseSignOut(currentAuth);
+      try {
+        await authAdapter.signOut(currentAuth);
+      } catch {
+        await firebaseSignOut(currentAuth);
+      }
       onUserChanged(null, validation.errorMessage || authConfig.restrictedErrorMessage);
       return;
     }

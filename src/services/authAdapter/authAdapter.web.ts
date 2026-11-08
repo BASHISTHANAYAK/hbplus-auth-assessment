@@ -55,6 +55,12 @@ export const authAdapter: IAuthAdapter = {
   },
 
   async signOut(auth: Auth): Promise<void> {
-    await firebaseSignOut(auth);
+    try {
+      if (auth) {
+        await firebaseSignOut(auth);
+      }
+    } catch {
+      // Ignore if already signed out
+    }
   },
 };

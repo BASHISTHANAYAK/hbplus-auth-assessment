@@ -40,6 +40,14 @@ export const authAdapter: IAuthAdapter = {
       // Check if Google Play Services are available (Android)
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
+      // Clear any retained native Google session so Google Play Services
+      // always displays the account chooser, allowing switching or adding accounts
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // Ignore if no native Google session was currently active
+      }
+
       // Initiate native Google authentication sheet/dialog
       const response = await GoogleSignin.signIn();
 
@@ -122,6 +130,12 @@ export const authAdapter: IAuthAdapter = {
     } catch {
       // Ignore if native google session was not initialized
     }
-    await firebaseSignOut(auth);
+    try {
+      if (auth) {
+        await firebaseSignOut(auth);
+      }
+    } catch {
+      // Ignore if already signed out
+    }
   },
 };
