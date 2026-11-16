@@ -7,7 +7,7 @@
 [![Expo](https://img.shields.io/badge/Expo-SDK%2058-000020.svg)](https://expo.dev/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.88-61DAFB.svg)](https://reactnative.dev/)
 [![Tests](https://img.shields.io/badge/Tests-27%20Passing%20(3%20Suites)-brightgreen.svg)]()
-[![Platform Support](https://img.shields.io/badge/Platforms-Web%20(Verified)%20%7C%20Android%20(Verified)%20%7C%20iOS%20(Untested)-blue.svg)]()
+[![Platform Support](https://img.shields.io/badge/Platforms-Web%20(Verified)%20%7C%20Android%20(Verified)-blue.svg)]()
 
 > **Project:** Employee Access Portal (Developer Portfolio Showcase)  
 > **Allowed Domain Policy:** `@outlook.com`  
@@ -21,7 +21,7 @@
 
 ## 1. Overview & Architecture
 
-The **Employee Access Portal** is a production-grade cross-platform authentication prototype demonstrating enterprise Single Sign-On (SSO) using **Google OAuth 2.0** and **Firebase Authentication**. Built with **React Native**, **React Native for Web**, and **Expo Router**, the application shares a single, unified codebase across Web and Android mobile environments.
+The **Employee Access Portal** is a production-grade cross-platform authentication application demonstrating enterprise Single Sign-On (SSO) using **Google OAuth 2.0** and **Firebase Authentication**. Built with **React Native**, **React Native for Web**, and **Expo Router**, the application shares a single, unified codebase across Web and Android environments.
 
 The portal enforces a strict corporate domain restriction policy: only Google-authenticated identities with a verified email ending in `@outlook.com` are granted access to internal employee resources.
 
@@ -44,7 +44,7 @@ The portal enforces a strict corporate domain restriction policy: only Google-au
   **`"Access restricted. Please sign in using a Google account associated with an @outlook.com email address. Other email domains are not permitted."`**
 * Upon rejection, client tokens are immediately revoked from both Firebase Authentication and the native Google identity provider.
 
-### 3. Seamless Google Account Switching
+### 3. Seamless Google Account Switching (Android)
 * On Android, Google Play Services caches the previously authenticated Google account. Without explicit cache invalidation, subsequent taps would auto-select the rejected account in an inescapable loop.
 * To guarantee seamless account switching:
   1. The native adapter calls `GoogleSignin.signOut()` directly prior to `GoogleSignin.signIn()`.
@@ -59,7 +59,7 @@ The portal enforces a strict corporate domain restriction policy: only Google-au
 
 ## 3. Cross-Platform Strategy & Code Sharing
 
-The application shares **100% of UI screens, routing guards, theme tokens, and domain validation logic** across Web and Mobile.
+The application shares **100% of UI screens, routing guards, theme tokens, and domain validation logic** across Web and Android.
 
 ```
                   ┌────────────────────────────────────────┐
@@ -82,7 +82,7 @@ The application shares **100% of UI screens, routing guards, theme tokens, and d
 
 ### Platform Adapter Pattern (`src/services/authAdapter/`)
 * **Web (`authAdapter.web.ts`)**: Uses Firebase Authentication's browser popup flow (`signInWithPopup`) with `GoogleAuthProvider`.
-* **Native Android & iOS (`authAdapter.native.ts`)**: Integrates `@react-native-google-signin/google-signin` to open the native Google Play Services account picker on Android (or native SDK dialog on iOS), then exchanges the verified Google ID token for a Firebase Auth credential (`GoogleAuthProvider.credential(idToken)` & `signInWithCredential`).
+* **Native Android (`authAdapter.native.ts`)**: Integrates `@react-native-google-signin/google-signin` to open the native Google Play Services account picker on Android, then exchanges the verified Google ID token for a Firebase Auth credential (`GoogleAuthProvider.credential(idToken)` & `signInWithCredential`).
 
 ---
 
@@ -274,7 +274,7 @@ EXPO_PUBLIC_ADMIN_EMAILS=admin@outlook.com
 ## 9. Development & Testing Commands
 
 ```bash
-# Start local Metro bundler (Web, Android, iOS)
+# Start local Metro bundler (Web & Android)
 npm start
 
 # Run in Web browser
@@ -339,28 +339,8 @@ npx eas-cli build --platform android --profile preview
 
 ---
 
-### iOS Platform (Requirements Documented — Untested)
-
-> [!WARNING]
-> **iOS Platform Testing Status: UNTESTED / NOT CONFIGURED**
-> 
-> The codebase shares universal components and platform abstraction for iOS, but **has not been tested on physical iOS devices or iOS simulators** due to development environment constraints (Windows host machine).
-
-#### iOS Setup Requirements for Reviewers with macOS:
-1. **Prerequisites**: macOS with Xcode 15+, CocoaPods installed (`sudo gem install cocoapods`).
-2. **Firebase iOS App**:
-   * In the Firebase Console, register an iOS app with bundle identifier: `com.hbplus.authportal`.
-   * Download `GoogleService-Info.plist` and place it in the project root.
-3. **URL Scheme**:
-   * Add the `REVERSED_CLIENT_ID` from `GoogleService-Info.plist` as a URL scheme in `app.json` or Xcode to support OAuth redirect callbacks.
-4. **Execution**:
-   ```bash
-   # Run on iOS simulator (macOS only)
-   npx expo run:ios
-   
-   # Or build using EAS cloud infrastructure
-   npx eas-cli build --platform ios --profile preview
-   ```
+### iOS Status
+> **Note on iOS:** iOS has not been tested and is not currently supported.
 
 ---
 
@@ -382,7 +362,6 @@ npx eas-cli build --platform android --profile preview
 | **Session Restoration** | Web & Android | Re-validates domain on reload before showing dashboard | ✅ **Verified** |
 | **Session Termination (Logout)** | Web & Android | Clears auth state, signs out from Firebase & Google, redirects to `/login` | ✅ **Verified** |
 | **Standalone Android Preview APK** | EAS Build & Pixel 7 | APK built, downloaded, installed, and validated on emulator | ✅ **Verified** |
-| **iOS Native Execution** | iOS Simulator / Device | Native Google Sign-In and dashboard navigation | ⚠️ **UNTESTED** |
 
 ---
 
