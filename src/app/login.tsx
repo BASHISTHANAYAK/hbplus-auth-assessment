@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { BrandHeader } from '../components/BrandHeader';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
@@ -62,8 +63,20 @@ export default function LoginScreen() {
           <View style={styles.authBox}>
             <Text style={styles.authTitle}>Sign in to your account</Text>
             <Text style={styles.authDescription}>
-              Use your corporate Google identity to access internal fitness, nutrition, and organizational resources.
+              Use your corporate Google identity to access internal employee resources.
             </Text>
+
+            {/* Prominent Demo Access Callout */}
+            <View style={styles.demoCalloutBox}>
+              <View style={styles.demoHeaderRow}>
+                <Ionicons name="information-circle" size={18} color={colors.accentDark} />
+                <Text style={styles.demoHeaderTitle}>Demo Access Requirement</Text>
+              </View>
+              <Text style={styles.demoCalloutText}>
+                Demo access: Sign in using a Google account associated with an{' '}
+                <Text style={styles.demoHighlight}>@outlook.com</Text> email address. Other email domains are not permitted.
+              </Text>
+            </View>
 
             <View style={styles.buttonWrapper}>
               <GoogleSignInButton
@@ -83,10 +96,10 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Prototype Evaluation Footer */}
+          {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerNote}>
-              HB+ Technology Assessment Prototype • OAuth 2.0 & Firebase Auth
+              Employee Access Portal • OAuth 2.0 & Firebase Auth
             </Text>
           </View>
         </View>
@@ -133,8 +146,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     lineHeight: 20,
+  },
+  demoCalloutBox: {
+    width: '100%',
+    backgroundColor: colors.accentMuted,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.accentLight,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  demoHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  demoHeaderTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.accentDark,
+    letterSpacing: 0.2,
+  },
+  demoCalloutText: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    lineHeight: 18,
+  },
+  demoHighlight: {
+    fontWeight: '700',
+    color: colors.accentDark,
   },
   buttonWrapper: {
     width: '100%',
@@ -150,21 +193,19 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.accent,
   },
   policyTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    marginBottom: spacing.xs,
   },
   policyText: {
     fontSize: 12,
     color: colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   domainHighlight: {
     fontWeight: '700',
-    color: colors.accentDark,
+    color: colors.accent,
   },
   footer: {
     marginTop: spacing.xl,

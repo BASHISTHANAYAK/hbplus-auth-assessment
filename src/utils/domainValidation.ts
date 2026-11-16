@@ -1,16 +1,21 @@
 import { DomainValidationResult } from '../types/auth';
 
 /**
- * Default production allowed domain for HB+ Employee Portal.
+ * Default production allowed domain for Employee Access Portal.
  */
-export const DEFAULT_ALLOWED_DOMAIN = 'hbplus.fit';
+export const DEFAULT_ALLOWED_DOMAIN = 'outlook.com';
 
 /**
- * Exact error message required by the problem statement:
- * "Access restricted. Please login using your official domain email."
+ * Dynamic error message builder when an unauthorized domain attempts to sign in.
  */
-export const RESTRICTED_DOMAIN_ERROR =
-  'Access restricted. Please login using your official domain email.';
+export function getRestrictedErrorMessage(allowedDomain: string = DEFAULT_ALLOWED_DOMAIN): string {
+  return `Access restricted. Please sign in using a Google account associated with an @${allowedDomain} email address. Other email domains are not permitted.`;
+}
+
+/**
+ * Exact error message required when domain access is denied.
+ */
+export const RESTRICTED_DOMAIN_ERROR = getRestrictedErrorMessage(DEFAULT_ALLOWED_DOMAIN);
 
 export const UNVERIFIED_EMAIL_ERROR =
   'Access restricted. Your Google email is not verified. Please verify your email with Google.';
@@ -53,9 +58,9 @@ export interface DomainValidationOptions {
  * and Google verification status.
  *
  * Security considerations:
- * 1. Requires exact match on domain (prevents `attacker@hbplus.fit.evil.com` or `user@fake-hbplus.fit`).
+ * 1. Requires exact match on domain (prevents `attacker@outlook.com.evil.com` or `user@fake-outlook.com`).
  * 2. Checks email verification status from Google identity token.
- * 3. Supports explicit test whitelist for evaluation without compromising production domain security.
+ * 3. Supports explicit test whitelist for evaluation without compromising domain security.
  */
 export function validateUserDomain(
   email: string | null | undefined,
@@ -65,12 +70,13 @@ export function validateUserDomain(
   const allowedDomain = (options.allowedDomain || DEFAULT_ALLOWED_DOMAIN).trim().toLowerCase();
   const testAllowedEmails = (options.testAllowedEmails || []).map((e) => e.trim().toLowerCase());
   const requireVerification = options.requireEmailVerification ?? true;
+  const currentRestrictedError = getRestrictedErrorMessage(allowedDomain);
 
   if (!email || typeof email !== 'string') {
     return {
       isAllowed: false,
       domain: null,
-      errorMessage: RESTRICTED_DOMAIN_ERROR,
+      errorMessage: currentRestrictedError,
     };
   }
 
@@ -81,7 +87,7 @@ export function validateUserDomain(
     return {
       isAllowed: false,
       domain: null,
-      errorMessage: RESTRICTED_DOMAIN_ERROR,
+      errorMessage: currentRestrictedError,
     };
   }
 
@@ -94,7 +100,7 @@ export function validateUserDomain(
     };
   }
 
-  // Check 1: Exact domain match (e.g. hbplus.fit)
+  // Check 1: Exact domain match (e.g. outlook.com)
   if (domain === allowedDomain) {
     return {
       isAllowed: true,
@@ -114,6 +120,6 @@ export function validateUserDomain(
   return {
     isAllowed: false,
     domain,
-    errorMessage: RESTRICTED_DOMAIN_ERROR,
+    errorMessage: currentRestrictedError,
   };
 }

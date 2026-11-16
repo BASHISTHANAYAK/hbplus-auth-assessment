@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../theme';
 
 interface BrandHeaderProps {
@@ -8,7 +9,7 @@ interface BrandHeaderProps {
 }
 
 export const BrandHeader: React.FC<BrandHeaderProps> = ({
-  subtitle = 'Fitness, Nutrition, Mental Health & Beyond',
+  subtitle = 'Secure Single Sign-On for Authorized Personnel',
   isCompact = false,
 }) => {
   return (
@@ -16,16 +17,16 @@ export const BrandHeader: React.FC<BrandHeaderProps> = ({
       {/* Brand Badge */}
       <View style={styles.brandRow}>
         <View style={styles.logoBadge}>
-          <Text style={styles.logoText}>HB</Text>
-          <Text style={styles.logoPlus}>+</Text>
+          <Ionicons name="business-outline" size={18} color="#FFFFFF" style={styles.badgeIcon} />
+          <Text style={styles.logoText}>ENTERPRISE</Text>
         </View>
         <View style={styles.tagBadge}>
-          <Text style={styles.tagText}>EMPLOYEE PORTAL</Text>
+          <Text style={styles.tagText}>SSO PORTAL</Text>
         </View>
       </View>
 
       <Text style={[styles.title, isCompact && styles.compactTitle]}>
-        HB+ Access Portal
+        Employee Access Portal
       </Text>
 
       {subtitle ? (
@@ -59,22 +60,19 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.md,
   },
+  badgeIcon: {
+    marginRight: spacing.xs,
+  },
   logoText: {
     color: '#FFFFFF',
     fontWeight: '800',
-    fontSize: 18,
-    letterSpacing: 0.5,
-  },
-  logoPlus: {
-    color: colors.accentLight,
-    fontWeight: '900',
-    fontSize: 20,
-    marginLeft: 2,
+    fontSize: 14,
+    letterSpacing: 1,
   },
   tagBadge: {
     backgroundColor: colors.badgeBg,
     paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
     borderColor: colors.cardBorder,
@@ -100,7 +98,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.xs,
-    maxWidth: 340,
+    lineHeight: 20,
   },
   compactSubtitle: {
     fontSize: 12,

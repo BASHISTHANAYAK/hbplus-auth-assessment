@@ -7,7 +7,7 @@ interface LoadingScreenProps {
 }
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({
-  message = 'Verifying HB+ credentials...',
+  message = 'Verifying credentials...',
 }) => {
   return (
     <View style={styles.container}>

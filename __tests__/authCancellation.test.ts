@@ -120,7 +120,7 @@ describe('Google Sign-In Cancellation and Account Switching', () => {
         type: 'success',
         data: {
           idToken: null,
-          user: { email: 'user@hbplus.fit', name: 'User' },
+          user: { email: 'user@outlook.com', name: 'User' },
         },
       });
 
@@ -136,13 +136,13 @@ describe('Google Sign-In Cancellation and Account Switching', () => {
         type: 'success',
         data: {
           idToken: 'valid-google-id-token-xyz',
-          user: { email: 'employee@hbplus.fit', name: 'Employee' },
+          user: { email: 'employee@outlook.com', name: 'Employee' },
         },
       });
 
       const mockUser = {
         uid: 'user-abc',
-        email: 'employee@hbplus.fit',
+        email: 'employee@outlook.com',
         emailVerified: true,
       };
 
@@ -207,7 +207,7 @@ describe('Google Sign-In Cancellation and Account Switching', () => {
       const flowResult = await signInWithGoogleFlow();
 
       expect(flowResult.success).toBe(false);
-      expect(flowResult.error).toBe('Access restricted. Please login using your official domain email.');
+      expect(flowResult.error).toContain('@outlook.com');
       // Crucial: authAdapter.signOut must be called so native Google selection is cleared
       expect(mockAdapterSignOut).toHaveBeenCalled();
     });

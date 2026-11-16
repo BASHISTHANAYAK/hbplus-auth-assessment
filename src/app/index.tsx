@@ -17,5 +17,5 @@ export default function IndexScreen() {
     }
   }, [user, isLoading, router]);
 
-  return <LoadingScreen message="Initializing HB+ Employee Portal..." />;
+  return <LoadingScreen message="Initializing Employee Access Portal..." />;
 }

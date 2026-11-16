@@ -1,4 +1,4 @@
-# HB+ Employee Access Portal — Cross-Platform Authentication App
+# Employee Access Portal — Cross-Platform Authentication App
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Netlify-00C7B7?logo=netlify&logoColor=white)](https://hbplus-auth-assessment.netlify.app)
 [![Android APK](https://img.shields.io/badge/Android%20APK-EAS%20Build%20Completed-34A853?logo=android&logoColor=white)](https://expo.dev/accounts/bashisthanayak/projects/hbplus-auth-assessment/builds/22cdb7f3-d860-4b3c-9812-1621eb81ba04)
@@ -9,9 +9,9 @@
 [![Tests](https://img.shields.io/badge/Tests-27%20Passing%20(3%20Suites)-brightgreen.svg)]()
 [![Platform Support](https://img.shields.io/badge/Platforms-Web%20(Verified)%20%7C%20Android%20(Verified)%20%7C%20iOS%20(Untested)-blue.svg)]()
 
-> **Assessment Submission:** IT Intern Hiring Assessment  
-> **Brand & Organization:** HB+ (Fitness, Nutrition, Mental Health & Beyond)  
-> **Production Target Domain:** `@hbplus.fit`  
+> **Project:** Employee Access Portal (Developer Portfolio Showcase)  
+> **Allowed Domain Policy:** `@outlook.com`  
+> **Demo Access Requirement:** Sign in using a Google account associated with an `@outlook.com` email address. Other email domains are not permitted.  
 > **Live Web Application:** [https://hbplus-auth-assessment.netlify.app](https://hbplus-auth-assessment.netlify.app)  
 > **Standalone Android APK:** [https://expo.dev/accounts/bashisthanayak/projects/hbplus-auth-assessment/builds/22cdb7f3-d860-4b3c-9812-1621eb81ba04](https://expo.dev/accounts/bashisthanayak/projects/hbplus-auth-assessment/builds/22cdb7f3-d860-4b3c-9812-1621eb81ba04)  
 > **GitHub Repository:** [https://github.com/BASHISTHANAYAK/hbplus-auth-assessment](https://github.com/BASHISTHANAYAK/hbplus-auth-assessment)  
@@ -19,22 +19,47 @@
 
 ---
 
-## 1. Executive Summary
+## 1. Overview & Architecture
 
-The **HB+ Employee Access Portal** is a cross-platform mobile and web application built using **React Native**, **React Native for Web**, and **Expo Router**. It demonstrates a single, unified codebase architecture enforcing strict **Google OAuth 2.0 Single Sign-On (SSO)** restricted to authorized enterprise identities.
+The **Employee Access Portal** is a production-grade cross-platform authentication prototype demonstrating enterprise Single Sign-On (SSO) using **Google OAuth 2.0** and **Firebase Authentication**. Built with **React Native**, **React Native for Web**, and **Expo Router**, the application shares a single, unified codebase across Web and Android mobile environments.
 
-### Core Behavior & Policy Enforcement
-* **Authorized Employee (`employee@hbplus.fit`)**: Access is granted to the protected internal dashboard, displaying verified profile credentials, avatar photo, identity metadata, and HB+ enterprise wellbeing resources.
-* **Unauthorized Domain (`someone@gmail.com` or external domains)**: Access is immediately denied, both Firebase and native Google Play Services sessions are cleared, and the user receives the required security alert:  
-  **`"Access restricted. Please login using your official domain email."`**
-* **Seamless Account Switching**: When an unauthorized account is rejected, client-side session state is fully evicted across both Firebase and the native Google SDK. Tapping "Sign in with Google" again immediately re-opens the native Google account chooser, allowing the user to select or add an alternate account rather than being locked into an auto-selection loop.
-* **Clean Cancellation Handling**: When a user opens the Google account picker and dismisses or cancels it without selecting an account, the application safely resets the loading indicator and returns to the login screen with **no misleading error messages**.
+The portal enforces a strict corporate domain restriction policy: only Google-authenticated identities with a verified email ending in `@outlook.com` are granted access to internal employee resources.
+
+### Application Preview
+![Employee Access Portal Preview](./assets/screenshots/android_login_preview.jpg)
+*Figure: Android Pixel 7 emulator running the Employee Access Portal side-by-side with Expo Metro, showing Google Sign-In and domain rejection enforcement.*
 
 ---
 
-## 2. Architecture & Cross-Platform Strategy
+## 2. Core Behaviors & Domain Enforcement
 
-The application shares **100% of UI components, routing guards, design system tokens, and domain validation logic** across Web, Android, and iOS.
+### 1. Authorized Access (`user@outlook.com`)
+* Authenticated users possessing a verified Google account with an `@outlook.com` email address are granted access to the protected internal dashboard (`/dashboard`).
+* The dashboard displays user identity metadata, Google avatar, verified badge, and internal workspace resources.
+
+### 2. Demo Access Requirement & Rejection (`someone@gmail.com` or other domains)
+* The login screen prominently communicates the access rule:  
+  > **"Demo access: Sign in using a Google account associated with an @outlook.com email address. Other email domains are not permitted."**
+* Any non-`@outlook.com` email (e.g., standard personal `@gmail.com` accounts or arbitrary external domains) is immediately denied entry with the matching security error:  
+  **`"Access restricted. Please sign in using a Google account associated with an @outlook.com email address. Other email domains are not permitted."`**
+* Upon rejection, client tokens are immediately revoked from both Firebase Authentication and the native Google identity provider.
+
+### 3. Seamless Google Account Switching
+* On Android, Google Play Services caches the previously authenticated Google account. Without explicit cache invalidation, subsequent taps would auto-select the rejected account in an inescapable loop.
+* To guarantee seamless account switching:
+  1. The native adapter calls `GoogleSignin.signOut()` directly prior to `GoogleSignin.signIn()`.
+  2. When domain validation rejects an email, `authAdapter.signOut()` flushes both Firebase Authentication and native Google Play Services sessions immediately.
+  3. Tapping "Sign in with Google" again re-opens the native Google account chooser sheet, allowing the user to select or register a different account.
+
+### 4. Cancellation Handling
+* When a user opens the Google account picker and dismisses or cancels it without selecting an account, the app catches library cancellation signals (`isCancelledResponse`, `response.type === 'cancelled'`, and `statusCodes.SIGN_IN_CANCELLED`).
+* The loading spinner resets cleanly and the user remains on the login screen with **no false or misleading error alerts**.
+
+---
+
+## 3. Cross-Platform Strategy & Code Sharing
+
+The application shares **100% of UI screens, routing guards, theme tokens, and domain validation logic** across Web and Mobile.
 
 ```
                   ┌────────────────────────────────────────┐
@@ -57,48 +82,29 @@ The application shares **100% of UI components, routing guards, design system to
 
 ### Platform Adapter Pattern (`src/services/authAdapter/`)
 * **Web (`authAdapter.web.ts`)**: Uses Firebase Authentication's browser popup flow (`signInWithPopup`) with `GoogleAuthProvider`.
-* **Native Android & iOS (`authAdapter.native.ts`)**: Integrates `@react-native-google-signin/google-signin` to launch the native Google Play Services account picker on Android (or native SDK sheet on iOS), then exchanges the verified Google ID token for a Firebase Auth credential (`GoogleAuthProvider.credential(idToken)` & `signInWithCredential`).
-* **Proactive Native Session Reset**: Prior to requesting sign-in, the native adapter invokes `GoogleSignin.signOut()`. This prevents Google Play Services from silently caching previous credentials and guarantees the native account chooser is presented on every attempt.
-* **Dual-Layer Sign-Out**: On domain validation failure or explicit user sign-out, `authAdapter.signOut()` flushes both native Google client state and Firebase Auth session tokens.
-* **Precise Cancellation Distinction**: Uses explicit response type assertions (`isCancelledResponse(response)`, `response.type === 'cancelled'`, and `statusCodes.SIGN_IN_CANCELLED`) to distinguish intentional user dismissal from genuine authentication failures or missing ID tokens.
-
----
-
-## 3. Production Policy & Testing Scope
-
-### Production Domain Restriction
-* Production builds reject all non-`@hbplus.fit` email addresses without exception.
-* Only Google-verified email accounts (`email_verified === true`) are permitted.
-
-### Development Testing Configuration
-* **Safe Evaluation Whitelist (`EXPO_PUBLIC_TEST_ALLOWED_EMAILS`)**: For local development review, designated reviewer Gmail addresses can be allowlisted to test the authorized dashboard flow. In [`src/config/authConfig.ts`](./src/config/authConfig.ts), this override is strictly disabled whenever `NODE_ENV === 'production'`.
-* **Domain Override Testing**: During development testing on the Android Pixel 7 emulator and Web, both positive and negative domain-validation flows were verified end-to-end:
-  * **Positive Authorization Verification**: Tested by temporarily setting `EXPO_PUBLIC_ALLOWED_DOMAIN=outlook.com` and signing in with a real Google account registered under an Outlook address. This confirmed genuine native Google authentication, token exchange, session restoration, and dashboard rendering.
-  * **Negative Rejection Verification**: Tested with personal Gmail accounts (`someone@gmail.com`), confirming immediate session revocation, the exact required error alert, and clean account re-selection.
-* **Production Configuration Clarification**: The temporary `outlook.com` test setting was strictly a local development verification step. **The real production domain configuration remains `@hbplus.fit` across all production deployments.**
-* **Assessment Notice**: No real `@hbplus.fit` corporate account was available for positive production testing. End-to-end authorization was validated through local domain override testing and comprehensive automated test suites.
+* **Native Android & iOS (`authAdapter.native.ts`)**: Integrates `@react-native-google-signin/google-signin` to open the native Google Play Services account picker on Android (or native SDK dialog on iOS), then exchanges the verified Google ID token for a Firebase Auth credential (`GoogleAuthProvider.credential(idToken)` & `signInWithCredential`).
 
 ---
 
 ## 4. Security Architecture & Limitations
 
 > [!IMPORTANT]
-> **Client-Side Domain Validation vs. Backend Authorization**
+> **Client-Side Domain Validation vs. Server-Side Authorization**
 > 
-> * **Client-Side Enforcement**: The domain guard in [`src/utils/domainValidation.ts`](./src/utils/domainValidation.ts) controls client-side route transitions, immediately terminates unapproved client sessions, and redirects unauthorized users away from protected screens.
-> * **Security Limitation**: Client-side validation **does not** constitute server-side authorization. A client running on an end-user device cannot be treated as a trusted boundary.
-> * **Production Recommendation**: Any production backend service or database must independently verify the Google ID token or Firebase Auth session cookie on the server (e.g., using the Firebase Admin SDK) and validate the `hd` (hosted domain) claim or `email` field before exposing enterprise data.
-> * **Database Rules**: Enterprise-grade Cloud Firestore security rules enforcing `@hbplus.fit` at the database tier are provided in [`firestore.rules`](./firestore.rules).
+> * **Client-Side Scope**: The domain guard in [`src/utils/domainValidation.ts`](./src/utils/domainValidation.ts) manages UI state transitions, protects navigation routes, and immediately tears down unauthorized client-side sessions.
+> * **Security Limitation**: Client-side domain validation **does not** constitute production-grade server-side authorization. Client code running on an end-user device or browser cannot be treated as a trusted security boundary.
+> * **Production Recommendation**: Any production backend service or database must independently verify the Google ID token or Firebase Auth session cookie on the server (e.g., using the Firebase Admin SDK) and validate the `email` or `hd` (hosted domain) claim before releasing sensitive enterprise records.
+> * **Database Rules**: Server-side Cloud Firestore security rules enforcing the allowed domain at the database tier are provided in [`firestore.rules`](./firestore.rules).
 > * **Firestore Default State**: Cloud Firestore profile synchronization is **disabled by default** (`EXPO_PUBLIC_ENABLE_FIRESTORE=false`), ensuring the app operates without unhandled database errors when no database instance exists.
 
 ---
 
-## 5. Authentication, Account-Switching & Cancellation Flow
+## 5. Authentication Sequence
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Employee / Evaluator
+    actor User as Employee / Visitor
     participant UI as Login Screen
     participant Adapter as Auth Adapter (Web/Native)
     participant Google as Google Identity Services
@@ -124,12 +130,12 @@ sequenceDiagram
         Firebase-->>Adapter: Authenticated FirebaseUser
         Adapter->>Guard: validateUserDomain(email, emailVerified)
         
-        alt Unauthorized Domain (Non-@hbplus.fit)
+        alt Unauthorized Domain (Non-@outlook.com)
             Guard-->>UI: isAllowed: false (RESTRICTED_DOMAIN_ERROR)
             UI->>Adapter: signOut() [Clears Firebase AND native Google session]
-            UI-->>User: "Access restricted. Please login using your official domain email."
+            UI-->>User: "Access restricted. Please sign in using a Google account associated with an @outlook.com email address. Other email domains are not permitted."
             Note over UI,User: Next tap opens account chooser cleanly
-        else Authorized Domain (@hbplus.fit or test allowlist)
+        else Authorized Domain (@outlook.com)
             Guard-->>UI: isAllowed: true
             UI-->>User: Grant access & redirect to /dashboard
         end
@@ -158,7 +164,8 @@ hbplus-auth-assessment/
 │   ├── domainValidation.test.ts # Domain validation, casing & security edge cases (11 tests)
 │   └── firestoreService.test.ts # Firestore bypass guard & role assignment tests (6 tests)
 │
-├── assets/                    # App icons, splash screens, adaptive icons
+├── assets/                    # App icons, splash screens, screenshots
+│   └── screenshots/           # Application screenshots (Android emulator preview)
 ├── public/
 │   └── _redirects             # Netlify SPA redirect fallback
 │
@@ -166,19 +173,19 @@ hbplus-auth-assessment/
     ├── app/                   # Expo Router screens (file-based navigation)
     │   ├── _layout.tsx        # Root layout with SafeAreaProvider, AuthProvider, Stack
     │   ├── index.tsx          # Initial entry router with session detection
-    │   ├── login.tsx          # HB+ branded login screen with Google button & alerts
+    │   ├── login.tsx          # Branded login screen with Google button, callouts & alerts
     │   └── dashboard.tsx      # Protected dashboard screen with user profile & logout
     │
     ├── components/            # Reusable UI components
     │   ├── AlertBanner.tsx    # Accessible error/warning alert banner
-    │   ├── BrandHeader.tsx    # HB+ corporate badge & typography
+    │   ├── BrandHeader.tsx    # Enterprise portal badge & typography
     │   ├── GoogleSignInButton.tsx # Branded Google button with loading spinner
     │   ├── LoadingScreen.tsx  # Centralized loading indicator
     │   ├── StatusBadge.tsx    # Color-coded status & role tags
     │   └── UserProfileCard.tsx# Profile card with photo, verified badge, domain details
     │
     ├── config/                # Environment & SDK configurations
-    │   ├── authConfig.ts      # Domain policy, error strings, and assessment overrides
+    │   ├── authConfig.ts      # Domain policy, error strings, and display metadata
     │   ├── firebase.native.ts # Native Firebase init with AsyncStorage persistence
     │   ├── firebase.web.ts    # Web Firebase initialization
     │   └── firebase.ts        # Common fallback export
@@ -196,8 +203,8 @@ hbplus-auth-assessment/
     │       ├── index.ts              # Platform-resolved entry
     │       └── types.ts              # Adapter interfaces & result types
     │
-    ├── theme/                 # HB+ design system
-    │   ├── colors.ts          # Vitality emerald, slate charcoal, and feedback colors
+    ├── theme/                 # Design system
+    │   ├── colors.ts          # Slate charcoal and emerald vitality palette
     │   ├── spacing.ts         # Paddings, margins, shadows, and border radii
     │   └── typography.ts      # Typography styles
     │
@@ -240,27 +247,26 @@ Populate `.env` with your Firebase and OAuth configuration:
 ```ini
 # Firebase Web Client Configuration (Firebase Console > Project Settings)
 EXPO_PUBLIC_FIREBASE_API_KEY=AIzaSy...
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.firebasestorage.app
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=hbplus-auth-assessment.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=hbplus-auth-assessment
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=hbplus-auth-assessment.firebasestorage.app
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
 EXPO_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef...
 
 # Google OAuth Web Client ID (Required for native token verification)
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-client-id.apps.googleusercontent.com
 
-# Target Corporate Domain (Default: hbplus.fit)
-EXPO_PUBLIC_ALLOWED_DOMAIN=hbplus.fit
+# Target Corporate Domain (Default: outlook.com)
+EXPO_PUBLIC_ALLOWED_DOMAIN=outlook.com
 
-# SAFE EVALUATION CONFIGURATION (Development Only)
-# Ignored in production release builds. Allows evaluators to test positive access:
-EXPO_PUBLIC_TEST_ALLOWED_EMAILS=evaluator@gmail.com
+# Safe Evaluation Whitelist (Optional, development only)
+# EXPO_PUBLIC_TEST_ALLOWED_EMAILS=reviewer@gmail.com
 
 # Optional Cloud Firestore toggle (Default: false)
 EXPO_PUBLIC_ENABLE_FIRESTORE=false
 
 # Optional Admin Email Whitelist
-EXPO_PUBLIC_ADMIN_EMAILS=admin@hbplus.fit
+EXPO_PUBLIC_ADMIN_EMAILS=admin@outlook.com
 ```
 
 ---
@@ -303,8 +309,8 @@ npm run build:web
 * **Auth Method**: `@react-native-google-signin/google-signin` native account sheet exchanging ID token for Firebase credentials.
 * **Verified Behaviors**:
   * Native Google Play Services account picker displays on every attempt.
-  * Successful Google login with allowlisted credentials grants access to `/dashboard`.
-  * External personal Gmail login correctly rejected with `"Access restricted. Please login using your official domain email."`
+  * Successful Google login with an `@outlook.com` credential grants access to `/dashboard`.
+  * External personal Gmail login correctly rejected with the domain restriction alert.
   * Session rejection clears native Google and Firebase state, enabling seamless account selection on the next attempt.
   * Dismissing the account chooser resets the loading state cleanly without showing errors.
   * Logout flushes session persistence and redirects to `/login`.
@@ -366,11 +372,11 @@ npx eas-cli build --platform android --profile preview
 | **Firestore Bypass Guard** | Unit Tests (`firestoreService.test.ts`) | Skips Firestore when disabled, prevents `(default)` database warnings | ✅ **6/6 Passed** |
 | **OAuth Cancellation & Account Switching** | Unit Tests (`authCancellation.test.ts`) | Distinguishes cancel vs token success vs true failure; clears sessions on reject | ✅ **10/10 Passed** |
 | **TypeScript Strict Compilation** | Entire Project | Clean compilation with strict typechecking enabled | ✅ **0 Errors** (`tsc --noEmit`) |
-| **Production Web Export** | Web (`dist/`) | Bundles 913 modules cleanly into production assets | ✅ **Passed** (`expo export -p web`) |
-| **Hermes Android Bundle Export** | Android (`dist/`) | Bundles 1280 modules into Hermes bytecode | ✅ **Passed** (`expo export -p android`) |
+| **Production Web Export** | Web (`dist/`) | Bundles cleanly into production assets | ✅ **Passed** (`expo export -p web`) |
+| **Hermes Android Bundle Export** | Android (`dist/`) | Bundles modules into Hermes bytecode | ✅ **Passed** (`expo export -p android`) |
 | **Unauthorized Domain (`@gmail.com`)** | Web & Android | Denies access, revokes session, displays required error | ✅ **Verified** |
 | **Account Switching on Rejection** | Android Native | Clears Google Play Services & Firebase state; re-prompts account chooser | ✅ **Verified** |
-| **Positive Authorization Flow** | Web & Android (Dev) | Grants dashboard access via dev override / allowlist testing | ✅ **Verified** |
+| **Positive Authorization Flow (`@outlook.com`)** | Web & Android | Grants dashboard access for authorized Google accounts | ✅ **Verified** |
 | **User Cancellation (Dismiss Picker)** | Web & Android | Returns cleanly to login, clears loading, no error shown | ✅ **Verified** |
 | **Route Protection & Direct URL Guard** | Web & Android | Unauthenticated visitors to `/dashboard` redirected to `/login` | ✅ **Verified** |
 | **Session Restoration** | Web & Android | Re-validates domain on reload before showing dashboard | ✅ **Verified** |
@@ -380,9 +386,7 @@ npx eas-cli build --platform android --profile preview
 
 ---
 
-## 12. Submission Summary & Links
-
-This project is submitted by **Bashistha Nayak** as an assessment artifact for the **HB+ IT Intern Hiring Assessment**.
+## 12. Project Links
 
 * **GitHub Repository:** [https://github.com/BASHISTHANAYAK/hbplus-auth-assessment](https://github.com/BASHISTHANAYAK/hbplus-auth-assessment)
 * **Live Web Application:** [https://hbplus-auth-assessment.netlify.app](https://hbplus-auth-assessment.netlify.app)

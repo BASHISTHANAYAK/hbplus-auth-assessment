@@ -71,7 +71,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({ user }) => {
 
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Organization Domain</Text>
-          <Text style={styles.detailValue}>@{user.domain || 'hbplus.fit'}</Text>
+          <Text style={styles.detailValue}>@{user.domain || 'outlook.com'}</Text>
         </View>
 
         <View style={styles.detailRow}>

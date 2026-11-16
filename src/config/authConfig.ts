@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 export const authConfig = {
   /**
    * The primary allowed corporate domain.
-   * Defaults to 'hbplus.fit', but can be configured via environment variable.
+   * Defaults to 'outlook.com', but can be configured via environment variable.
    */
   allowedDomain: (process.env.EXPO_PUBLIC_ALLOWED_DOMAIN || DEFAULT_ALLOWED_DOMAIN).trim().toLowerCase(),
 
@@ -39,7 +39,7 @@ export const authConfig = {
   /**
    * Application display metadata.
    */
-  appName: 'HB+ Employee Access Portal',
-  tagline: 'Fitness, Nutrition, Mental Health & Beyond',
-  assessmentDisclaimer: 'Assessment Prototype',
+  appName: 'Employee Access Portal',
+  tagline: 'Secure Single Sign-On for Authorized Personnel',
+  assessmentDisclaimer: 'Portfolio Showcase',
 };

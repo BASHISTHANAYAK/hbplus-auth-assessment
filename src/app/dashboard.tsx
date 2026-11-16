@@ -15,7 +15,7 @@ import { LoadingScreen } from '../components/LoadingScreen';
 import { colors, spacing, borderRadius, shadows } from '../theme';
 
 export default function DashboardScreen() {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading, signOut, allowedDomain } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -41,8 +41,7 @@ export default function DashboardScreen() {
       <View style={[styles.navbar, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <View style={styles.navBrand}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>HB</Text>
-            <Text style={styles.logoPlus}>+</Text>
+            <Ionicons name="business-outline" size={18} color="#FFFFFF" />
           </View>
           <Text style={styles.navTitle}>Employee Portal</Text>
         </View>
@@ -73,40 +72,40 @@ export default function DashboardScreen() {
                 Welcome back, {user.displayName?.split(' ')[0] || 'Employee'}!
               </Text>
               <Text style={styles.welcomeSubtext}>
-                HB+ Enterprise Health & Fitness Network
+                Enterprise Workspace & Identity Portal
               </Text>
             </View>
           </View>
 
-          {/* User Profile Card (Official Requirement) */}
+          {/* User Profile Card */}
           <UserProfileCard user={user} />
 
           {/* Sample Employee Dashboard Content */}
           <Text style={styles.sectionHeader}>Employee Workspace</Text>
 
           <View style={styles.grid}>
-            {/* Widget 1: Health & Wellness Program */}
+            {/* Widget 1: Workplace Resources */}
             <View style={styles.gridCard}>
               <View style={[styles.cardIconBox, { backgroundColor: colors.accentMuted }]}>
-                <Ionicons name="fitness-outline" size={24} color={colors.accentDark} />
+                <Ionicons name="briefcase-outline" size={24} color={colors.accentDark} />
               </View>
-              <Text style={styles.cardTitle}>Fitness & Wellbeing</Text>
+              <Text style={styles.cardTitle}>Workplace Resources</Text>
               <Text style={styles.cardDesc}>
-                Access sponsored gym memberships, health consultations, and monthly wellness stipends.
+                Access internal productivity tools, project workspaces, and professional development resources.
               </Text>
               <View style={styles.cardFooter}>
-                <Text style={styles.cardFooterHighlight}>Active Benefit • Tier 1</Text>
+                <Text style={styles.cardFooterHighlight}>Active Workspace</Text>
               </View>
             </View>
 
-            {/* Widget 2: Security & Compliance */}
+            {/* Widget 2: Security & Identity */}
             <View style={styles.gridCard}>
               <View style={[styles.cardIconBox, { backgroundColor: '#EFF6FF' }]}>
                 <Ionicons name="shield-checkmark-outline" size={24} color="#2563EB" />
               </View>
               <Text style={styles.cardTitle}>Security & Identity</Text>
               <Text style={styles.cardDesc}>
-                OAuth 2.0 single sign-on with strict @hbplus.fit domain validation and token persistence.
+                OAuth 2.0 single sign-on with strict @{allowedDomain || 'outlook.com'} domain validation and token persistence.
               </Text>
               <View style={styles.cardFooter}>
                 <Text style={[styles.cardFooterHighlight, { color: '#2563EB' }]}>
@@ -120,23 +119,23 @@ export default function DashboardScreen() {
               <View style={[styles.cardIconBox, { backgroundColor: '#FDF2F8' }]}>
                 <Ionicons name="people-outline" size={24} color="#DB2777" />
               </View>
-              <Text style={styles.cardTitle}>Internal Directory</Text>
+              <Text style={styles.cardTitle}>Team Directory</Text>
               <Text style={styles.cardDesc}>
-                Connect with cross-functional nutritionists, trainers, engineering, and product peers.
+                Connect with cross-functional engineering, operations, and product team peers.
               </Text>
               <View style={styles.cardFooter}>
                 <Text style={[styles.cardFooterHighlight, { color: '#DB2777' }]}>
-                  HB+ Team Access
+                  Enterprise Directory
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Assessment Prototype Note */}
+          {/* Session Policy Card */}
           <View style={styles.prototypeCard}>
             <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
             <Text style={styles.prototypeText}>
-              This session is validated against the @{user.domain || 'hbplus.fit'} corporate domain policy.
+              This session is validated against the @{user.domain || allowedDomain || 'outlook.com'} corporate domain policy.
               Sign out to clear your authenticated token session.
             </Text>
           </View>
@@ -152,14 +151,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   navbar: {
-    backgroundColor: colors.cardBackground,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.cardBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorder,
     ...shadows.button,
   },
   navBrand: {
@@ -168,89 +167,77 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   logoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.sm + 2,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
-  },
-  logoText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 14,
-  },
-  logoPlus: {
-    color: colors.accentLight,
-    fontWeight: '900',
-    fontSize: 16,
-    marginLeft: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: colors.textPrimary,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.sm + 2,
-    borderRadius: borderRadius.sm,
     backgroundColor: colors.errorBackground,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.errorBorder,
+    gap: spacing.xs,
   },
   logoutText: {
-    fontSize: 13,
-    fontWeight: '600',
     color: colors.error,
+    fontWeight: '600',
+    fontSize: 13,
   },
   scrollContent: {
-    padding: spacing.lg,
+    flexGrow: 1,
     alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
   },
   contentWrapper: {
     width: '100%',
-    maxWidth: 800,
-    gap: spacing.lg,
+    maxWidth: 720,
   },
   welcomeBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
+    ...shadows.card,
   },
   welcomeGreeting: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: '#FFFFFF',
+    marginBottom: spacing.xs,
   },
   welcomeSubtext: {
     fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
+    color: colors.accentLight,
   },
   sectionHeader: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginTop: spacing.sm,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.md,
   },
   gridCard: {
-    flex: 1,
-    minWidth: 240,
     backgroundColor: colors.cardBackground,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    padding: spacing.md,
+    padding: spacing.lg,
     ...shadows.card,
   },
   cardIconBox: {
@@ -259,25 +246,24 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   cardDesc: {
     fontSize: 13,
     color: colors.textSecondary,
-    lineHeight: 18,
-    flex: 1,
+    lineHeight: 19,
+    marginBottom: spacing.md,
   },
   cardFooter: {
-    marginTop: spacing.md,
-    paddingTop: spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    borderTopColor: colors.cardBorder,
+    paddingTop: spacing.sm,
   },
   cardFooterHighlight: {
     fontSize: 12,
@@ -287,18 +273,18 @@ const styles = StyleSheet.create({
   prototypeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.cardBackground,
+    backgroundColor: colors.badgeBg,
     borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginTop: spacing.xl,
+    gap: spacing.sm,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    padding: spacing.md,
-    marginTop: spacing.xs,
   },
   prototypeText: {
+    flex: 1,
     fontSize: 12,
     color: colors.textSecondary,
-    flex: 1,
     lineHeight: 18,
   },
 });

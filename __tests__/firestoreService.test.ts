@@ -19,11 +19,11 @@ import { AuthUser } from '../src/types/auth';
 describe('Firestore Service & Configuration Guard', () => {
   const mockUser: AuthUser = {
     uid: 'test-user-123',
-    email: 'employee@hbplus.fit',
+    email: 'employee@outlook.com',
     displayName: 'Test Employee',
     photoURL: 'https://example.com/avatar.jpg',
     emailVerified: true,
-    domain: 'hbplus.fit',
+    domain: 'outlook.com',
     role: 'employee',
   };
 
@@ -36,7 +36,7 @@ describe('Firestore Service & Configuration Guard', () => {
 
   describe('determineUserRole', () => {
     it('should return employee for standard email', () => {
-      expect(determineUserRole('john.doe@hbplus.fit')).toBe('employee');
+      expect(determineUserRole('john.doe@outlook.com')).toBe('employee');
     });
 
     it('should return employee if email is null', () => {
@@ -44,8 +44,8 @@ describe('Firestore Service & Configuration Guard', () => {
     });
 
     it('should return customRole if provided', () => {
-      expect(determineUserRole('user@hbplus.fit', 'admin')).toBe('admin');
-      expect(determineUserRole('user@hbplus.fit', 'employee')).toBe('employee');
+      expect(determineUserRole('user@outlook.com', 'admin')).toBe('admin');
+      expect(determineUserRole('user@outlook.com', 'employee')).toBe('employee');
     });
   });
 
